@@ -1,5 +1,5 @@
 # SimpleWebServer
-minimal local c# webserver, tries to server index.html from folder
+minimal local c# webserver, tries to serve index.html from folder
 
 ### USAGE
 - SimpleWebServer.exe [root-folder-to-serve] [port]
