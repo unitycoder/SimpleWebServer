@@ -3,6 +3,10 @@
 
 name: .NET
 
+# dummy fix for 403 error?
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ "main" ]
