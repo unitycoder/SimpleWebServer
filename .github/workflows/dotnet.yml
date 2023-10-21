@@ -22,3 +22,11 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Publish
+      run: dotnet publish SimpleWebServer.csproj -c Release -o bin/Release
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.3
+      with:
+        name: Release
+        path: SimpleWebServer/bin/Release/**
+        if-no-files-found: error
