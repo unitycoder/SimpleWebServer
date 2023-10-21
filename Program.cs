@@ -20,6 +20,11 @@ namespace SimpleWebServer
 
             StartServer(port);
 
+            // launch browser
+            string url = $"http://localhost:{port}/";
+            Console.WriteLine("Launching browser: " + url);
+            Tools.LaunchBrowser(url);
+
             Console.WriteLine("Press Enter to exit.");
             Console.ReadLine();
         }
@@ -138,7 +143,7 @@ namespace SimpleWebServer
                 }
                 else if (!File.Exists(page))
                 {
-                    Console.WriteLine("Not found");
+                    Console.WriteLine("Not found: " + page);
                     msg = "<html><body>404 Not found</body></html>";
                     response.StatusCode = 404;
                 }

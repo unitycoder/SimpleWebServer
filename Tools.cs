@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Security.Principal;
+using System.Diagnostics;
 
 namespace SimpleWebServer
 {
@@ -117,5 +118,17 @@ namespace SimpleWebServer
             return args;
         }
 
+        internal static void LaunchBrowser(string url)
+        {
+            try
+            {
+                url = url.Replace("&", "^&");
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error launching browser: " + ex.Message);
+            }
+        }
     } // class
 }
