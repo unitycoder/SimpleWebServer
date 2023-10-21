@@ -28,11 +28,16 @@ jobs:
       run: dotnet build --no-restore
     - name: Publish
       run: dotnet publish SimpleWebServer.csproj -c Release -o bin/Release/net7.0
+    - name: Create Release Archive
+      run: |
+        # Create a zip archive of the release files
+        zip -r SimpleWebServer.zip ./bin/Release/net7.0
+      working-directory: ${{ github.workspace }}
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.3
       with:
         name: SimpleWebServer
-        path: D:/a/SimpleWebServer/SimpleWebServer/bin/Release/net7.0/**
+        path: SimpleWebServer.zip
         if-no-files-found: error
     - name: Generate release tag
       id: tag
@@ -45,5 +50,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
-        files: ./bin/Release/net7.0/**
+        files: ./release/*
         
