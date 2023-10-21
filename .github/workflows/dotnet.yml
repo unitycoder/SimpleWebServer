@@ -21,7 +21,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -42,7 +42,7 @@ jobs:
     - name: Generate release tag
       id: tag
       run: |
-        echo "::set-output name=release_tag::SimpleWebServer_$(date +"%Y.%m.%d_%H-%M")"
+        echo "::set-output name=release_tag::SimpleWebServer_$(date +"%d_%m_%Y_%H-%M")"
     - name: Create GitHub Release
       id: create_release
       uses: softprops/action-gh-release@v1
