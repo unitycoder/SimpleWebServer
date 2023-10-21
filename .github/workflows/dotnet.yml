@@ -27,6 +27,13 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.3
       with:
-        name: Release
+        name: SimpleWebServer
         path: D:/a/SimpleWebServer/SimpleWebServer/bin/Release/net7.0/**
         if-no-files-found: error
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./bin/Release/net7.0/**
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
