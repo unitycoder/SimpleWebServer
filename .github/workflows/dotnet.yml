@@ -37,7 +37,7 @@ jobs:
     - name: Generate release tag
       id: tag
       run: |
-        echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
+        echo "::set-output name=release_tag::SimpleWebServer_$(date +"%Y.%m.%d_%H-%M")"
     - name: Create GitHub Release
       id: create_release
       uses: softprops/action-gh-release@v1
