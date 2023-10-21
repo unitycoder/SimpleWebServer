@@ -196,7 +196,7 @@ namespace SimpleWebServer
                 else
                 {
 
-                    Console.WriteLine("Serving: " + path+" ("+ response.ContentType + ")");
+                    Console.WriteLine("Serving: " + path + " (" + response.ContentType + ")");
 
 
                     FileStream fileStream = File.Open(page, FileMode.Open);
