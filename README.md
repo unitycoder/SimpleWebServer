@@ -1,5 +1,5 @@
 # SimpleWebServer
-smoll local c# webserver
+smoll local c# webserver (ps. no security or safety!)
 
 ### Features
 - Easily start webserver for specific folder
