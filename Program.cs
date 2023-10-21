@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 
 namespace SimpleWebServer
@@ -7,107 +6,57 @@ namespace SimpleWebServer
     internal class Program
     {
         static string rootFolder = "";
+        static bool allowExternalConnections = false;
+        static string defaultPort = "8080";
 
         static void Main(string[] args)
         {
-            string defaultPort = "8080";
-
-            // get local folderpath and port as arguments: SimpleWebServer.exe "C:\Users\user\Documents\My Web Sites\MyWebSite" 8080
-
-            // if too many arguments, show usage
-            if (args == null || args.Length > 2 || args.Length < 1)
-            {
-                Console.WriteLine("Usage: SimpleWebServer.exe [folderpath] [port]");
-                Console.ReadLine();
-                return;
-            }
-
-            // if only 1 argument, check if its path or port number
-            if (args.Length == 1)
-            {
-                // if its a path, use it
-                if (Directory.Exists(args[0]))
-                {
-                    var temp = args[0];
-                    args = new string[2];
-                    args[0] = temp;
-                    args[1] = defaultPort;
-                }
-
-                // if its a port number, use current exe folder and that port
-                else if (int.TryParse(args[0], out int portNumber))
-                {
-                    args = new string[2];
-                    args[0] = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                    args[1] = portNumber.ToString();
-                }
-                // if its not a path or port number, show usage
-                else
-                {
-                    Console.WriteLine("Usage: SimpleWebServer.exe [folderpath] [port]");
-                    Console.ReadLine();
-                    return;
-                }
-            }
-
-            // if no 2 arguments, use current exe folder and port 8080
-            if (args.Length < 2)
-            {
-                args = new string[2];
-                args[0] = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                args[1] = defaultPort;
-            }
+            args = Tools.ValidateArguments(args, defaultPort);
+            if (args == null) return;
 
             rootFolder = args[0];
             string port = args[1];
-
-            // check if path exists
-            if (!Directory.Exists(rootFolder))
-            {
-                Console.WriteLine("Path " + rootFolder + " does not exist.");
-                Console.ReadLine();
-                return;
-            }
-
-            // check if tcp listener port is available
-            if (!PortAvailable(port))
-            {
-                Console.WriteLine("Port " + port + " is not available.");
-                Console.ReadLine();
-                return;
-            }
-
             Console.WriteLine("Serving directory: " + args[0]);
 
-            string url = "http://localhost:" + port + "/";
-
-            HttpListener listener = new HttpListener();
-            listener.Prefixes.Add(url);
-            Console.WriteLine("Listening for requests on " + url);
-            listener.Start();
-
-            listener.BeginGetContext(RequestHandler, listener);
+            StartServer(port);
 
             Console.WriteLine("Press Enter to exit.");
             Console.ReadLine();
         }
 
-        private static bool PortAvailable(string port)
+        private static void StartServer(string port)
         {
-            bool portAvailable = true;
-            IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-            IPEndPoint[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpListeners();
+            // start server
+            HttpListener listener = new HttpListener();
+            listener.Prefixes.Add($"http://localhost:{port}/");
 
-            foreach (IPEndPoint endpoint in tcpConnInfoArray)
+            // check if runas admin
+            bool isAdmin = Tools.IsUserAnAdmin();
+
+            if (isAdmin == true)
             {
-                if (endpoint.Port.ToString() == port)
+                // then allow external connections
+                allowExternalConnections = true;
+                Console.WriteLine("The application is running as an administrator. External connections are allowed!");
+                // NOTE using hostname ipaddress requires admin rights
+                var ipAddress = Tools.GetIpAddress();
+                if (string.IsNullOrEmpty(ipAddress.ToString()) == false)
                 {
-                    portAvailable = false;
-                    break;
+                    listener.Prefixes.Add($"http://{ipAddress}:{port}/");
                 }
             }
+            else
+            {
+                Console.WriteLine("The application is not running as an administrator.");
+            }
 
-            return portAvailable;
+            foreach (string prefix in listener.Prefixes)
+            {
+                Console.WriteLine("Listening: " + prefix);
+            }
+
+            listener.Start();
+            listener.BeginGetContext(RequestHandler, listener);
         }
 
         static void RequestHandler(IAsyncResult result)
@@ -167,7 +116,6 @@ namespace SimpleWebServer
                 else if (path.EndsWith(".js"))// || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
                 {
                     response.ContentType = "application/javascript";
-                    Console.WriteLine("js file");
                 }
                 //else if (path.EndsWith(".data.gz"))
                 //{
@@ -181,7 +129,8 @@ namespace SimpleWebServer
                 string page = rootFolder + path;
                 string msg = null;
 
-                if (!context.Request.IsLocal)
+                // this allows only local access
+                if (allowExternalConnections == false && context.Request.IsLocal == false)
                 {
                     Console.WriteLine("Forbidden.");
                     msg = "<html><body>403 Forbidden</body></html>";
@@ -195,27 +144,29 @@ namespace SimpleWebServer
                 }
                 else
                 {
+                    // display current client ip address
+                    Console.WriteLine(context.Request.RemoteEndPoint.Address + " < " + path + " (" + response.ContentType + ")");
 
-                    Console.WriteLine("Serving: " + path + " (" + response.ContentType + ")");
-
-
-                    FileStream fileStream = File.Open(page, FileMode.Open);
-                    BinaryReader reader = new BinaryReader(fileStream);
-                    try
+                    using (FileStream fileStream = File.Open(page, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (BinaryReader reader = new BinaryReader(fileStream))
                     {
                         response.ContentLength64 = fileStream.Length;
-                        byte[] buffer2 = reader.ReadBytes(4096);
-                        while (buffer2.Length != 0)
+
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+
+                        try
                         {
-                            response.OutputStream.Write(buffer2, 0, buffer2.Length);
-                            buffer2 = reader.ReadBytes(4096);
+                            while ((bytesRead = reader.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                response.OutputStream.Write(buffer, 0, bytesRead);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error reading file: " + ex);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error reading file: " + ex);
-                    }
-                    reader.Close();
                 }
 
                 if (msg != null)
