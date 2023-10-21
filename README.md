@@ -19,3 +19,5 @@ SimpleWebServer.exe c:\work\website 8080
 [root-folder-to-serve] : application folder (where .exe is located)
 [port] : 8080
 
+### Troubleshooting
+- Other computer cannot connect? You need to open firewall on the hosting pc (allow inbound TCP 8080)
