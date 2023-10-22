@@ -2,11 +2,15 @@
 smoll local c# webserver (ps. no security or safety!)
 
 ### Features
-- Easily start webserver for specific folder
+- Easily start webserver for specific folder from Explorer context menu!
 - Customizable port
 - Running as admin allows you to host using IP Address (so other computers from your network 192.* can connect)
+- F1 = Install Context menu
+- F2 = Uninstall Context menu
+- F12 = Restart App as an Administrator
 
 ### USAGE
+- Easy method is to use Context menu inside Explorer folder
 - SimpleWebServer.exe [root-folder-to-serve] [port]
 - SimpleWebServer.exe
 - SimpleWebServer.exe [port]
