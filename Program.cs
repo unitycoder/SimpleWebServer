@@ -25,10 +25,11 @@ namespace SimpleWebServer
             Console.WriteLine("Launching browser: " + url);
             Tools.LaunchBrowser(url);
 
+            Console.WriteLine("Press F1 to Install Explorer Context menu or F2 to Uninstall");
             // wait for keypress to restart as admin
             if (Tools.IsUserAnAdmin() == false)
             {
-                Console.WriteLine("Press Enter to exit or F12 to run as admin (to allow external connections)");
+                Console.WriteLine("Press Enter to exit, or F12 to run as admin (to allow external connections)");
                 Console.WriteLine("------------------------------------------------");
                 while (true)
                 {
