@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Security.Principal;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace SimpleWebServer
 {
@@ -67,6 +68,21 @@ namespace SimpleWebServer
             // if only 1 argument, check if its path or port number
             if (args.Length == 1)
             {
+                // check if its Install or Uninstall
+                if (args[0].ToLower() == "install")
+                {
+                    Console.WriteLine("Installing context menu...");
+                    InstallContextMenu();
+                    return null;
+                }
+
+                if (args[0].ToLower() == "uninstall")
+                {
+                    Console.WriteLine("Uninstalling context menu...");
+                    UninstallContextMenu();
+                    return null;
+                }
+
                 // if its a path, use it
                 if (Directory.Exists(args[0]))
                 {
@@ -116,6 +132,63 @@ namespace SimpleWebServer
                 return null;
             }
             return args;
+        }
+
+        private static void InstallContextMenu()
+        {
+            string contextRegRoot = "Software\\Classes\\Directory\\Background\\shell";
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(contextRegRoot, true);
+
+            // add folder if missing
+            if (key == null)
+            {
+                key = Registry.CurrentUser.CreateSubKey(@"Software\Classes\Directory\Background\Shell");
+            }
+
+            if (key != null)
+            {
+                var appName = "SimpleWebBrowser";
+                key.CreateSubKey(appName);
+
+                key = key.OpenSubKey(appName, true);
+                key.SetValue("", "Start " + appName + " here");
+                key.SetValue("Icon", "\"" + Process.GetCurrentProcess().MainModule.FileName + "\"");
+
+                key.CreateSubKey("command");
+                key = key.OpenSubKey("command", true);
+                var executeString = "\"" + Process.GetCurrentProcess().MainModule.FileName + "\"";
+                // TODO add port
+                executeString += " \"%V\"";
+                key.SetValue("", executeString);
+            }
+            else
+            {
+                Console.WriteLine("Error> Cannot find registry key: " + contextRegRoot);
+            }
+        }
+
+        public static void UninstallContextMenu()
+        {
+            string contextRegRoot = "Software\\Classes\\Directory\\Background\\shell";
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(contextRegRoot, true);
+            if (key != null)
+            {
+                var appName = "SimpleWebBrowser";
+                RegistryKey appKey = Registry.CurrentUser.OpenSubKey(contextRegRoot + "\\" + appName, false);
+                if (appKey != null)
+                {
+                    key.DeleteSubKeyTree(appName);
+                    //SetStatus("Removed context menu registry items");
+                }
+                else
+                {
+                    //SetStatus("Nothing to uninstall..");
+                }
+            }
+            else
+            {
+                //SetStatus("Error> Cannot find registry key: " + contextRegRoot);
+            }
         }
 
         internal static void LaunchBrowser(string url)

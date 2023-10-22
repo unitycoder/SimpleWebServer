@@ -26,6 +26,7 @@ namespace SimpleWebServer
             Tools.LaunchBrowser(url);
 
             Console.WriteLine("Press Enter to exit.");
+            Console.WriteLine("------------------------------------------------");
             Console.ReadLine();
         }
 
@@ -83,9 +84,6 @@ namespace SimpleWebServer
                 response.Headers["Expires"] = "0";
 
                 string path = Uri.UnescapeDataString(context.Request.Url.LocalPath);
-
-                // get exe path for now
-                //string rootFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
                 if (path == "/")
                 {
@@ -149,8 +147,8 @@ namespace SimpleWebServer
                 }
                 else
                 {
-                    // display current client ip address
-                    Console.WriteLine(context.Request.RemoteEndPoint.Address + " < " + path + " (" + response.ContentType + ")");
+                    // display client ip address and request info
+                    Console.WriteLine(context.Request.RemoteEndPoint.Address + " < " + path + (response.ContentType != null ? " (" + response.ContentType + ")" : ""));
 
                     using (FileStream fileStream = File.Open(page, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (BinaryReader reader = new BinaryReader(fileStream))
