@@ -1,4 +1,6 @@
 # SimpleWebServer
+[![GitHub license](https://img.shields.io/github/license/unitycoder/SimpleWebServer)](https://github.com/unitycoder/SimpleWebServer/blob/master/LICENSE) [](https://discord.gg/cXT97hU)<a href="https://discord.gg/cXT97hU"><img src="https://img.shields.io/discord/337579253866692608.svg"></a> [![Downloads](https://img.shields.io/github/downloads/unitycoder/simplewebserver/total)](https://github.com/unitycoder/SimpleWebServer/releases/latest/download/SimpleWebServer.zip) [![VirusTotal scan now](https://img.shields.io/static/v1?label=VirusTotal&message=Scan)](https://www.virustotal.com/gui/url/20ad2875b1531a90112d2c8fd2c47a3aa0748ba81b9906c0cee304808c43dc76?nocache=1)
+
 smoll single exe local c# webserver (ps. no security or safety!)
 
 ### Features
