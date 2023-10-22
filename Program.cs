@@ -108,7 +108,7 @@ namespace SimpleWebServer
                     path = "/index.html";
                 }
 
-                if (Path.GetExtension(path) == ".html" || path.EndsWith(".js"))// || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
+                if (Path.GetExtension(path) == ".html" || path.EndsWith(".js") || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
                 {
                     response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
                     response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
@@ -116,36 +116,36 @@ namespace SimpleWebServer
                 }
 
                 // unity webgl support
-                //if (Path.GetExtension(path) == ".gz")
-                //{
-                //    response.AddHeader("Content-Encoding", "gzip");
-                //}
-                //else if (Path.GetExtension(path) == ".br")
-                //{
-                //    response.AddHeader("Content-Encoding", "br");
-                //}
+                if (Path.GetExtension(path) == ".gz")
+                {
+                    response.AddHeader("Content-Encoding", "gzip");
+                }
+                else if (Path.GetExtension(path) == ".br")
+                {
+                    response.AddHeader("Content-Encoding", "br");
+                }
 
                 if (context.Request.Headers.Get("Range") != null)
                 {
                     response.AddHeader("Accept-Ranges", "bytes");
                 }
 
-                //if (path.EndsWith(".wasm") || path.EndsWith(".wasm.gz") || path.EndsWith(".wasm.br"))
-                //{
-                //    response.ContentType = "application/wasm";
-                //}
-                else if (path.EndsWith(".js"))// || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
+                if (path.EndsWith(".wasm") || path.EndsWith(".wasm.gz") || path.EndsWith(".wasm.br"))
+                {
+                    response.ContentType = "application/wasm";
+                }
+                else if (path.EndsWith(".js") || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
                 {
                     response.ContentType = "application/javascript";
                 }
-                //else if (path.EndsWith(".data.gz"))
-                //{
-                //    response.ContentType = "application/gzip";
-                //}
-                //else if (path.EndsWith(".data") || path.EndsWith(".data.br"))
-                //{
-                //    response.ContentType = "application/octet-stream";
-                //}
+                else if (path.EndsWith(".data.gz"))
+                {
+                    response.ContentType = "application/gzip";
+                }
+                else if (path.EndsWith(".data") || path.EndsWith(".data.br"))
+                {
+                    response.ContentType = "application/octet-stream";
+                }
 
                 string page = rootFolder + path;
                 string msg = null;
