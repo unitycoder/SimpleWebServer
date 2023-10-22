@@ -20,7 +20,31 @@ namespace SimpleWebServer
 
             StartServer(port);
 
-            Console.WriteLine("Press Enter to exit.");
+            // launch browser
+            string url = $"http://localhost:{port}/";
+            Console.WriteLine("Launching browser: " + url);
+            Tools.LaunchBrowser(url);
+
+            Console.WriteLine("Press F1 to Install Explorer Context menu or F2 to Uninstall");
+            // wait for keypress to restart as admin
+            if (Tools.IsUserAnAdmin() == false)
+            {
+                Console.WriteLine("Press Enter to exit, or F12 to run as admin (to allow external connections)");
+                Console.WriteLine("------------------------------------------------");
+                while (true)
+                {
+                    var k = Console.ReadKey(true);
+                    if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(args);
+                    if (k.Key == ConsoleKey.F1) Tools.InstallContextMenu();
+                    if (k.Key == ConsoleKey.F2) Tools.UninstallContextMenu();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Press Enter to exit.");
+                Console.WriteLine("------------------------------------------------");
+            }
+
             Console.ReadLine();
         }
 
@@ -79,9 +103,6 @@ namespace SimpleWebServer
 
                 string path = Uri.UnescapeDataString(context.Request.Url.LocalPath);
 
-                // get exe path for now
-                //string rootFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
                 if (path == "/")
                 {
                     path = "/index.html";
@@ -138,14 +159,14 @@ namespace SimpleWebServer
                 }
                 else if (!File.Exists(page))
                 {
-                    Console.WriteLine("Not found");
+                    Console.WriteLine("Not found: " + page);
                     msg = "<html><body>404 Not found</body></html>";
                     response.StatusCode = 404;
                 }
                 else
                 {
-                    // display current client ip address
-                    Console.WriteLine(context.Request.RemoteEndPoint.Address + " < " + path + " (" + response.ContentType + ")");
+                    // display client ip address and request info
+                    Console.WriteLine(context.Request.RemoteEndPoint.Address + " < " + path + (response.ContentType != null ? " (" + response.ContentType + ")" : ""));
 
                     using (FileStream fileStream = File.Open(page, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (BinaryReader reader = new BinaryReader(fileStream))
