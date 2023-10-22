@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Security.Principal;
 using System.Diagnostics;
 using Microsoft.Win32;
+using System.Reflection;
 
 namespace SimpleWebServer
 {
@@ -203,5 +204,32 @@ namespace SimpleWebServer
                 Console.WriteLine("Error launching browser: " + ex.Message);
             }
         }
+
+        internal static void RestartAsAdmin(string[] args)
+        {
+            try
+            {
+                // Get the path to the current executable
+                string exePath = Process.GetCurrentProcess().MainModule.FileName;
+
+                // Create a new process with elevated permissions
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.UseShellExecute = true;
+                startInfo.WorkingDirectory = Environment.CurrentDirectory;
+                startInfo.FileName = exePath;
+                startInfo.Arguments = string.Join(" ", args); // Pass the same arguments
+                startInfo.Verb = "runas"; // Run as administrator
+
+                Process.Start(startInfo);
+
+                // Exit the current process
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error restarting as administrator: " + ex.Message);
+            }
+        }
+
     } // class
 }

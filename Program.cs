@@ -25,8 +25,27 @@ namespace SimpleWebServer
             Console.WriteLine("Launching browser: " + url);
             Tools.LaunchBrowser(url);
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.WriteLine("------------------------------------------------");
+            // wait for keypress to restart as admin
+            if (Tools.IsUserAnAdmin() == false)
+            {
+                Console.WriteLine("Press Enter to exit or F12 to run as admin (to allow external connections)");
+                Console.WriteLine("------------------------------------------------");
+                while (true)
+                {
+                    var k = Console.ReadKey(false);
+                    if (k.Key == ConsoleKey.F12)
+                    {
+                        Console.WriteLine("Restart as admin!");
+                        Tools.RestartAsAdmin(args);
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Press Enter to exit.");
+                Console.WriteLine("------------------------------------------------");
+            }
+
             Console.ReadLine();
         }
 
