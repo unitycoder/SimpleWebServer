@@ -1,5 +1,5 @@
 # SimpleWebServer
-smoll local c# webserver (ps. no security or safety!)
+smoll single exe local c# webserver (ps. no security or safety!)
 
 ### Features
 - Easily start webserver for specific folder from Explorer context menu!
