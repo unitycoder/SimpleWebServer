@@ -27,11 +27,11 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish SimpleWebServer.csproj -c Release -o bin/Release
+      run: dotnet publish SimpleWebServer.csproj -c Release -o bin/Release/net7.0
     - name: Create Release Archive
       run: |
         # Create a zip archive of the release files using PowerShell
-        Compress-Archive -Path ./bin/Release -DestinationPath SimpleWebServer.zip
+        Compress-Archive -Path ./bin/Release/net7.0/* -DestinationPath SimpleWebServer.zip
       working-directory: ${{ github.workspace }}
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.3
