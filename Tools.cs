@@ -62,7 +62,14 @@ namespace SimpleWebServer
             if (args == null || args.Length > 2 || args.Length < 1)
             {
                 Console.WriteLine("Usage: SimpleWebServer.exe [folderpath] [port]");
-                Console.ReadLine();
+                Console.WriteLine("Do you want to install Context menu item? (y/n)");
+                var res = Console.ReadLine();
+                if (res == "y")
+                {
+                    InstallContextMenu();
+                    Console.WriteLine("You can now close this window and launch application from Explorer folder Context menu.");
+                    Console.ReadLine();
+                }
                 return null;
             }
 
