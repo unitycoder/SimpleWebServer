@@ -135,7 +135,7 @@ namespace SimpleWebServer
             return args;
         }
 
-        private static void InstallContextMenu()
+        internal static void InstallContextMenu()
         {
             string contextRegRoot = "Software\\Classes\\Directory\\Background\\shell";
             RegistryKey key = Registry.CurrentUser.OpenSubKey(contextRegRoot, true);
@@ -161,6 +161,7 @@ namespace SimpleWebServer
                 // TODO add port
                 executeString += " \"%V\"";
                 key.SetValue("", executeString);
+                Console.WriteLine("Installed context menu item!");
             }
             else
             {
@@ -179,16 +180,16 @@ namespace SimpleWebServer
                 if (appKey != null)
                 {
                     key.DeleteSubKeyTree(appName);
-                    //SetStatus("Removed context menu registry items");
+                    Console.WriteLine("Removed context menu item!");
                 }
                 else
                 {
-                    //SetStatus("Nothing to uninstall..");
+                    //Console.WriteLine("Nothing to uninstall..");
                 }
             }
             else
             {
-                //SetStatus("Error> Cannot find registry key: " + contextRegRoot);
+                //Console.WriteLine("Error> Cannot find registry key: " + contextRegRoot);
             }
         }
 

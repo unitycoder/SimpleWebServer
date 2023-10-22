@@ -32,12 +32,10 @@ namespace SimpleWebServer
                 Console.WriteLine("------------------------------------------------");
                 while (true)
                 {
-                    var k = Console.ReadKey(false);
-                    if (k.Key == ConsoleKey.F12)
-                    {
-                        Console.WriteLine("Restart as admin!");
-                        Tools.RestartAsAdmin(args);
-                    }
+                    var k = Console.ReadKey(true);
+                    if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(args);
+                    if (k.Key == ConsoleKey.F1) Tools.InstallContextMenu();
+                    if (k.Key == ConsoleKey.F2) Tools.UninstallContextMenu();
                 }
             }
             else
