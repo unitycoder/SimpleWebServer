@@ -9,6 +9,7 @@ smoll single exe local c# webserver (ps. no security or safety!)
 - Running as admin allows you to host using IP Address (so other computers from your network 192.* can connect)
 - F1 = Install Context menu
 - F2 = Uninstall Context menu
+- F5 = Open Browser (again)
 - F12 = Restart App as an Administrator
 
 ### USAGE
