@@ -1,17 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Security.Principal;
 using System.Diagnostics;
 using Microsoft.Win32;
-using System.Reflection;
 
 namespace SimpleWebServer
 {
     internal static class Tools
     {
+        public static void Log(string msg, ConsoleColor color = ConsoleColor.White)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(msg);
+        }
+
         // get LAN IP address starting with 192.
         public static object GetIpAddress()
         {
@@ -25,7 +28,7 @@ namespace SimpleWebServer
             }
             else
             {
-                Console.WriteLine("LAN IP Address not found.");
+                Log("LAN IP Address not found.");
                 return null;
             }
         }
@@ -61,13 +64,13 @@ namespace SimpleWebServer
             // if too many arguments, show usage
             if (args == null || args.Length > 2 || args.Length < 1)
             {
-                Console.WriteLine("Usage: SimpleWebServer.exe [folderpath] [port]");
-                Console.WriteLine("Do you want to install Context menu item? (y/n)");
+                Log("Usage: SimpleWebServer.exe [folderpath] [port]");
+                Log("Do you want to install Context menu item? (y/n)");
                 var res = Console.ReadLine();
                 if (res == "y")
                 {
                     InstallContextMenu();
-                    Console.WriteLine("You can now close this window and launch application from Explorer folder Context menu.");
+                    Log("You can now close this window and launch application from Explorer folder Context menu.");
                     Console.ReadLine();
                 }
                 return null;
@@ -79,14 +82,14 @@ namespace SimpleWebServer
                 // check if its Install or Uninstall
                 if (args[0].ToLower() == "install")
                 {
-                    Console.WriteLine("Installing context menu...");
+                    Log("Installing context menu...");
                     InstallContextMenu();
                     return null;
                 }
 
                 if (args[0].ToLower() == "uninstall")
                 {
-                    Console.WriteLine("Uninstalling context menu...");
+                    Log("Uninstalling context menu...");
                     UninstallContextMenu();
                     return null;
                 }
@@ -110,7 +113,7 @@ namespace SimpleWebServer
                 // if its not a path or port number, show usage
                 else
                 {
-                    Console.WriteLine("Usage: SimpleWebServer.exe [folderpath] [port]");
+                    Log("Usage: SimpleWebServer.exe [folderpath] [port]");
                     Console.ReadLine();
                     return null;
                 }
@@ -127,7 +130,7 @@ namespace SimpleWebServer
             // check if path exists
             if (!Directory.Exists(args[0]))
             {
-                Console.WriteLine("Path " + args[0] + " does not exist.");
+                Log("Path " + args[0] + " does not exist.", ConsoleColor.Red);
                 Console.ReadLine();
                 return null;
             }
@@ -135,7 +138,7 @@ namespace SimpleWebServer
             // check if tcp listener port is available
             if (Tools.PortAvailable(args[1]) == false)
             {
-                Console.WriteLine("Port " + args[1] + " is not available.");
+                Log("Port " + args[1] + " is not available.", ConsoleColor.Red);
                 Console.ReadLine();
                 return null;
             }
@@ -168,11 +171,11 @@ namespace SimpleWebServer
                 // TODO add port
                 executeString += " \"%V\"";
                 key.SetValue("", executeString);
-                Console.WriteLine("Installed context menu item!");
+                Log("Installed context menu item!");
             }
             else
             {
-                Console.WriteLine("Error> Cannot find registry key: " + contextRegRoot);
+                Log("Error> Cannot find registry key: " + contextRegRoot, ConsoleColor.Red);
             }
         }
 
@@ -187,7 +190,7 @@ namespace SimpleWebServer
                 if (appKey != null)
                 {
                     key.DeleteSubKeyTree(appName);
-                    Console.WriteLine("Removed context menu item!");
+                    Log("Removed context menu item!");
                 }
                 else
                 {
@@ -196,12 +199,13 @@ namespace SimpleWebServer
             }
             else
             {
-                //Console.WriteLine("Error> Cannot find registry key: " + contextRegRoot);
+                Log("Error> Cannot find registry key: " + contextRegRoot, ConsoleColor.Red);
             }
         }
 
         internal static void LaunchBrowser(string url)
         {
+            Log("Launching browser: " + url);
             try
             {
                 url = url.Replace("&", "^&");
@@ -209,7 +213,7 @@ namespace SimpleWebServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error launching browser: " + ex.Message);
+                Log("Error launching browser: " + ex.Message, ConsoleColor.Red);
             }
         }
 
@@ -235,9 +239,23 @@ namespace SimpleWebServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error restarting as administrator: " + ex.Message);
+                Log("Error restarting as administrator: " + ex.Message, ConsoleColor.Red);
             }
         }
 
+        internal static void PrintBanner()
+        {
+            string banner = @" _____ _           _     _ _ _     _   _____                     
+|   __|_|_____ ___| |___| | | |___| |_|   __|___ ___ _ _ ___ ___ 
+|__   | |     | . | | -_| | | | -_| . |__   | -_|  _| | | -_|  _|
+|_____|_|_|_|_|  _|_|___|_____|___|___|_____|___|_|  \_/|___|_|  
+              |_|";
+
+            Tools.Log(banner, ConsoleColor.Cyan);
+            Tools.Log("https://github.com/unitycoder/SimpleWebServer\n", ConsoleColor.DarkGray);
+
+        }
+
+
     } // class
-}
+} // namespace

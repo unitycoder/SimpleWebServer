@@ -1,48 +1,54 @@
-﻿using System.Net;
+﻿using System;
+using System.Drawing;
+using System.Net;
 using System.Text;
+
 
 namespace SimpleWebServer
 {
     internal class Program
     {
+        static readonly string appID = "SimpleWebServer";
         static string rootFolder = "";
         static bool allowExternalConnections = false;
         static string defaultPort = "8080";
 
         static void Main(string[] args)
         {
+            Tools.PrintBanner();
+
             args = Tools.ValidateArguments(args, defaultPort);
             if (args == null) return;
 
             rootFolder = args[0];
             string port = args[1];
-            Console.WriteLine("Serving directory: " + args[0]);
+            Tools.Log("Serving directory: " + args[0]);
 
             StartServer(port);
 
             // launch browser
             string url = $"http://localhost:{port}/";
-            Console.WriteLine("Launching browser: " + url);
             Tools.LaunchBrowser(url);
 
-            Console.WriteLine("Press F1 to Install Explorer Context menu or F2 to Uninstall");
+            Tools.Log("Press F1 to Install Explorer Context menu or F2 to Uninstall, Press F5 to open Browser");
             // wait for keypress to restart as admin
             if (Tools.IsUserAnAdmin() == false)
             {
-                Console.WriteLine("Press Enter to exit, or F12 to run as admin (to allow external connections)");
-                Console.WriteLine("------------------------------------------------");
+                Tools.Log("Press Enter to exit, or F12 to run as admin (to allow external connections)");
+                Tools.Log("------------------------------------------------");
                 while (true)
                 {
                     var k = Console.ReadKey(true);
                     if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(args);
                     if (k.Key == ConsoleKey.F1) Tools.InstallContextMenu();
                     if (k.Key == ConsoleKey.F2) Tools.UninstallContextMenu();
+                    if (k.Key == ConsoleKey.F5) Tools.LaunchBrowser(url);
                 }
             }
             else
             {
-                Console.WriteLine("Press Enter to exit.");
-                Console.WriteLine("------------------------------------------------");
+                Tools.Log("Press Enter to exit.");
+                Tools.Log("------------------------------------------------");
             }
 
             Console.ReadLine();
@@ -61,7 +67,7 @@ namespace SimpleWebServer
             {
                 // then allow external connections
                 allowExternalConnections = true;
-                Console.WriteLine("The application is running as an administrator. External connections are allowed!");
+                Tools.Log("The application is running as an administrator. External connections are allowed!");
                 // NOTE using hostname ipaddress requires admin rights
                 var ipAddress = Tools.GetIpAddress();
                 if (string.IsNullOrEmpty(ipAddress.ToString()) == false)
@@ -71,12 +77,12 @@ namespace SimpleWebServer
             }
             else
             {
-                Console.WriteLine("The application is not running as an administrator.");
+                Tools.Log("The application is not running as an administrator.");
             }
 
             foreach (string prefix in listener.Prefixes)
             {
-                Console.WriteLine("Listening: " + prefix);
+                Tools.Log("Listening: " + prefix, ConsoleColor.Green);
             }
 
             listener.Start();
@@ -153,20 +159,20 @@ namespace SimpleWebServer
                 // this allows only local access
                 if (allowExternalConnections == false && context.Request.IsLocal == false)
                 {
-                    Console.WriteLine("Forbidden.");
+                    Tools.Log("Forbidden.", ConsoleColor.Red);
                     msg = "<html><body>403 Forbidden</body></html>";
                     response.StatusCode = 403;
                 }
                 else if (!File.Exists(page))
                 {
-                    Console.WriteLine("Not found: " + page);
+                    Tools.Log("Not found: " + page, ConsoleColor.Red);
                     msg = "<html><body>404 Not found</body></html>";
                     response.StatusCode = 404;
                 }
                 else
                 {
                     // display client ip address and request info
-                    Console.WriteLine(context.Request.RemoteEndPoint.Address + " < " + path + (response.ContentType != null ? " (" + response.ContentType + ")" : ""));
+                    Tools.Log(context.Request.RemoteEndPoint.Address + " < " + path + (response.ContentType != null ? " (" + response.ContentType + ")" : ""));
 
                     using (FileStream fileStream = File.Open(page, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (BinaryReader reader = new BinaryReader(fileStream))
@@ -185,7 +191,7 @@ namespace SimpleWebServer
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error reading file: " + ex);
+                            Tools.Log("Error reading file: " + ex, ConsoleColor.Yellow);
                         }
                     }
                 }
@@ -204,7 +210,6 @@ namespace SimpleWebServer
 
                 throw;
             }
-
         } // RequestHandler
 
     } // Program
