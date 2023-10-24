@@ -1,8 +1,5 @@
-﻿using System;
-using System.Drawing;
-using System.Net;
+﻿using System.Net;
 using System.Text;
-
 
 namespace SimpleWebServer
 {
@@ -30,19 +27,22 @@ namespace SimpleWebServer
             string url = $"http://localhost:{port}/";
             Tools.LaunchBrowser(url);
 
-            Tools.Log("Press F1 to Install Explorer Context menu or F2 to Uninstall, Press F5 to open Browser");
+            Tools.Log("Press F1/F2 to Install/Uninstall Explorer Context menu");
+            Tools.Log("Press F3/F4 to add/remove executable on User environment PATH");
+            Tools.Log("Press F5 to open Browser");
             // wait for keypress to restart as admin
             if (Tools.IsUserAnAdmin() == false)
             {
-                Tools.Log("Press Enter to exit, or F12 to run as admin (to allow external connections)");
+                Tools.Log("Press Enter to exit, or F12 to run as Admin (to allow external connections)");
                 Tools.Log("------------------------------------------------");
                 while (true)
                 {
                     var k = Console.ReadKey(true);
-                    if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(args);
                     if (k.Key == ConsoleKey.F1) Tools.InstallContextMenu();
                     if (k.Key == ConsoleKey.F2) Tools.UninstallContextMenu();
-                    if (k.Key == ConsoleKey.F5) Tools.LaunchBrowser(url);
+                    if (k.Key == ConsoleKey.F3) Tools.ModifyUserEnvPATH(add: true);
+                    if (k.Key == ConsoleKey.F4) Tools.ModifyUserEnvPATH(add: false);
+                    if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(args);
                 }
             }
             else

@@ -65,14 +65,40 @@ namespace SimpleWebServer
             if (args == null || args.Length > 2 || args.Length < 1)
             {
                 Log("Usage: SimpleWebServer.exe [folderpath] [port]");
-                Log("Do you want to install Context menu item? (y/n)");
-                var res = Console.ReadLine();
-                if (res == "y")
+
+                // check if already exists in registry
+                if (IsInstalledInRegistry())
                 {
-                    InstallContextMenu();
-                    Log("You can now close this window and launch application from Explorer folder Context menu.");
-                    Console.ReadLine();
+                    Log("Good, application is already installed in registry Explorer context menu, you can use it there.");
                 }
+                else
+                {
+                    Log("Do you want to install Context menu item? (y/n)");
+                    var res2 = Console.ReadLine();
+                    if (res2 == "y")
+                    {
+                        InstallContextMenu();
+                    }
+                }
+
+                string exePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+                if (IsAlreadyAddedToPath())
+                {
+                    Log("Good, application (" + exePath + ") is already added to user environment PATH, you can use it from anywhere in command line.");
+                }
+                else
+                {
+                    Log("Do you want to add exe path (" + exePath + ") to user environment PATH? (y/n)");
+                    var res = Console.ReadLine();
+                    if (res == "y")
+                    {
+                        ModifyUserEnvPATH(add: true);
+                    }
+                }
+
+                Log("You can now close this window");
+                Console.ReadLine();
+
                 return null;
             }
 
@@ -179,6 +205,22 @@ namespace SimpleWebServer
             }
         }
 
+        static bool IsInstalledInRegistry()
+        {
+            string contextRegRoot = "Software\\Classes\\Directory\\Background\\shell";
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(contextRegRoot, true);
+            if (key != null)
+            {
+                var appName = "SimpleWebBrowser";
+                RegistryKey appKey = Registry.CurrentUser.OpenSubKey(contextRegRoot + "\\" + appName, false);
+                if (appKey != null)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static void UninstallContextMenu()
         {
             string contextRegRoot = "Software\\Classes\\Directory\\Background\\shell";
@@ -251,11 +293,52 @@ namespace SimpleWebServer
 |_____|_|_|_|_|  _|_|___|_____|___|___|_____|___|_|  \_/|___|_|  
               |_|";
 
-            Tools.Log(banner, ConsoleColor.Cyan);
-            Tools.Log("https://github.com/unitycoder/SimpleWebServer\n", ConsoleColor.DarkGray);
+            Log(banner, ConsoleColor.Cyan);
+            Log("https://github.com/unitycoder/SimpleWebServer\n", ConsoleColor.DarkGray);
 
         }
 
+        static bool IsAlreadyAddedToPath()
+        {
+            string executablePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User);
+            return path.Contains(executablePath);
+        }
+
+        // WARNING: if user has the exe in common already existing path, it will be removed!
+        internal static void ModifyUserEnvPATH(bool add)
+        {
+            string executablePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User);
+
+            if (path.Contains(executablePath) == false)
+            {
+                if (add == true)
+                {
+                    path = $"{path};{executablePath}";
+                    Environment.SetEnvironmentVariable("PATH", path, EnvironmentVariableTarget.User);
+                    Log("Directory added to user PATH successfully.", ConsoleColor.Gray);
+                    Log("NOTE: You need to restart PC or Logout/Login, for changes to take effect in certain applications, like Unity Editor.", ConsoleColor.Yellow);
+                }
+                else // remove
+                {
+                    Log("Directory is not in PATH.", ConsoleColor.Yellow);
+                }
+            }
+            else // already added
+            {
+                if (add == true)
+                {
+                    Log("Directory is already in PATH.", ConsoleColor.Yellow);
+                }
+                else
+                {
+                    path = path.Replace(executablePath, "");
+                    Environment.SetEnvironmentVariable("PATH", path, EnvironmentVariableTarget.User);
+                    Log("Directory removed from user PATH successfully.", ConsoleColor.Gray);
+                }
+            }
+        }
 
     } // class
 } // namespace
