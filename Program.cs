@@ -21,6 +21,7 @@ namespace SimpleWebServer
             string port = args[1];
             Tools.Log("Serving directory: " + args[0]);
 
+            Tools.SaveSettings(args);
             StartServer(port);
 
             // launch browser

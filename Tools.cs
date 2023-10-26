@@ -69,11 +69,12 @@ namespace SimpleWebServer
                 // check if already exists in registry
                 if (IsInstalledInRegistry())
                 {
-                    Log("Good, application is already installed in registry Explorer context menu, you can use it there.");
+                    Log("Good. Explorer Context menu is already installed, you can use it there.");
                 }
                 else
                 {
-                    Log("Do you want to install Context menu item? (y/n)");
+                    // TODO make enter as "y" default
+                    Log("Do you want to install Context menu item? (y/N)");
                     var res2 = Console.ReadLine();
                     if (res2 == "y")
                     {
@@ -82,18 +83,54 @@ namespace SimpleWebServer
                 }
 
                 string exePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+
                 if (IsAlreadyAddedToPath())
                 {
-                    Log("Good, application (" + exePath + ") is already added to user environment PATH, you can use it from anywhere in command line.");
+                    Log("Good. Application folder is already added to user environment PATH, you can use it from anywhere in command line.");
                 }
                 else
                 {
-                    Log("Do you want to add exe path (" + exePath + ") to user environment PATH? (y/n)");
+                    // TODO make enter as "y" default
+                    Log("Do you want to add exe path (" + exePath + ") to user environment PATH? (y/N)");
                     var res = Console.ReadLine();
                     if (res == "y")
                     {
                         ModifyUserEnvPATH(add: true);
                     }
+                }
+
+                // load settings
+                var settings = LoadSettings();
+                string prevProjectPath;
+                string prevPort;
+                settings.TryGetValue("ProjectPath", out prevProjectPath);
+
+                if (string.IsNullOrEmpty(prevProjectPath) == false && Directory.Exists(prevProjectPath) == true)
+                {
+                    // TODO make enter as "y" default
+                    Log("Do you want to start in previous Project folder: " + prevProjectPath + " ? (y/N)");
+                    var res = Console.ReadLine();
+                    if (res == "y")
+                    {
+                        args = new string[2];
+                        args[0] = prevProjectPath;
+
+                        settings.TryGetValue("Port", out prevPort);
+                        if (int.TryParse(prevPort, out int portNumber) == false) prevPort = defaultPort;
+                        args[1] = string.IsNullOrEmpty(prevPort) ? defaultPort : prevPort;
+                        return args;
+                    }
+                }
+
+                // ask if want to start in current folder
+                Log("Do you want to start server in the current folder: " + exePath + " ? (y/N)");
+                var res3 = Console.ReadLine();
+                if (res3 == "y")
+                {
+                    args = new string[2];
+                    args[0] = exePath;
+                    args[1] = defaultPort;
+                    return args;
                 }
 
                 Log("You can now close this window");
@@ -169,6 +206,68 @@ namespace SimpleWebServer
                 return null;
             }
             return args;
+        }
+
+        static Dictionary<string, string> LoadSettings()
+        {
+            var settings = new Dictionary<string, string>();
+            // load from roaming folder
+            var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var settingsFile = Path.Combine(roamingFolder, "SimpleWebServer", "config.ini");
+
+            if (File.Exists(settingsFile))
+            {
+                Log("Loading settings from: " + settingsFile, ConsoleColor.DarkGray);
+
+                var lines = File.ReadAllLines(settingsFile);
+                foreach (var line in lines)
+                {
+                    var parts = line.Split('=');
+                    if (parts.Length == 2)
+                    {
+                        settings[parts[0].Trim()] = parts[1].Trim();
+                    }
+                }
+            }
+            return settings;
+        }
+
+        internal static void SaveSettings(string[] settings)
+        {
+            // load from roaming folder
+            var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var settingsFile = Path.Combine(roamingFolder, "SimpleWebServer", "config.ini");
+
+            try
+            {
+                // if folder is missing, create it
+                var folder = Path.GetDirectoryName(settingsFile);
+                if (Directory.Exists(folder) == false)
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                var lines = new List<string>();
+                foreach (var setting in settings)
+                {
+                    // if number, its port, if path, its project path
+                    if (int.TryParse(setting, out int portNumber))
+                    {
+                        if (portNumber >= 80 && portNumber < 65535) lines.Add("Port=" + portNumber);
+                    }
+                    else
+                    {
+                        if (Directory.Exists(setting)) lines.Add("ProjectPath=" + setting);
+                    }
+                }
+                File.WriteAllLines(settingsFile, lines);
+                Log("Saved settings to " + settingsFile, ConsoleColor.DarkGray);
+            }
+            catch (Exception)
+            {
+                Log("Failed to save settings to " + settingsFile, ConsoleColor.Red);
+                throw;
+            }
         }
 
         internal static void InstallContextMenu()
