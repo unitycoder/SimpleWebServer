@@ -66,6 +66,51 @@ namespace SimpleWebServer
 
         public static string[]? ValidateArguments(string[] args, string defaultPort)
         {
+            // TODO add change server folder button? restarts in new folder?
+            // TODO if have correct arguments, should use them or config? probably should use arguments then
+
+            string exePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+
+            // load settings first, so can override things
+            var settings = LoadSettings();
+            string prevProjectPath;
+            string prevPort;
+            settings.TryGetValue("ProjectPath", out prevProjectPath);
+
+            if (string.IsNullOrEmpty(prevProjectPath) == false && Directory.Exists(prevProjectPath) == true)
+            {
+                // if projectpath is ., show current exe folder
+                if (prevProjectPath == ".") prevProjectPath = exePath;
+
+                // TODO make enter as "y" default
+
+                // check if silent mode (then dont ask if want to start)
+                string silentModeString;
+                if (settings.TryGetValue("Silent", out silentModeString) && silentModeString.ToLower() == "true")
+                {
+                    silentMode = true;
+                }
+
+                string res = "n";
+                if (silentMode == false)
+                {
+                    Log("Do you want to start server for folder: " + prevProjectPath + " ? (y/N)");
+                    res = Console.ReadLine();
+                }
+
+                if (silentMode == true || res == "y")
+                {
+                    args = new string[2];
+                    args[0] = prevProjectPath;
+
+                    settings.TryGetValue("Port", out prevPort);
+                    if (int.TryParse(prevPort, out int portNumber) == false) prevPort = defaultPort;
+                    args[1] = string.IsNullOrEmpty(prevPort) ? defaultPort : prevPort;
+
+                    return args;
+                }
+            }
+
             // if too many arguments, show usage
             if (args == null || args.Length > 2 || args.Length < 1)
             {
@@ -79,15 +124,16 @@ namespace SimpleWebServer
                 else
                 {
                     // TODO make enter as "y" default
-                    Log("Do you want to install Context menu item? (y/N)");
-                    var res2 = Console.ReadLine();
-                    if (res2 == "y")
+                    if (silentMode == false)
                     {
-                        InstallContextMenu();
+                        Log("Do you want to install Context menu item? (y/N)");
+                        var res2 = Console.ReadLine();
+                        if (res2 == "y")
+                        {
+                            InstallContextMenu();
+                        }
                     }
                 }
-
-                string exePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
 
                 if (IsAlreadyAddedToPath())
                 {
@@ -95,52 +141,15 @@ namespace SimpleWebServer
                 }
                 else
                 {
-                    // TODO make enter as "y" default
-                    Log("Do you want to add exe path (" + exePath + ") to user environment PATH? (y/N)");
-                    var res = Console.ReadLine();
-                    if (res == "y")
-                    {
-                        ModifyUserEnvPATH(add: true);
-                    }
-                }
-
-                // load settings
-                var settings = LoadSettings();
-                string prevProjectPath;
-                string prevPort;
-                settings.TryGetValue("ProjectPath", out prevProjectPath);
-
-                if (string.IsNullOrEmpty(prevProjectPath) == false && Directory.Exists(prevProjectPath) == true)
-                {
-                    // if projectpath is ., show current exe folder
-                    if (prevProjectPath == ".") prevProjectPath = exePath;
-
-                    // TODO make enter as "y" default
-
-                    // check if silent mode (then dont ask if want to start)
-                    string silentModeString;
-                    if (settings.TryGetValue("Silent", out silentModeString) && silentModeString.ToLower() == "true")
-                    {
-                        silentMode = true;
-                    }
-
-                    string res = "n";
                     if (silentMode == false)
                     {
-                        Log("Do you want to start server for folder: " + prevProjectPath + " ? (y/N)");
-                        res = Console.ReadLine();
-                    }
-
-                    if (silentMode == true || res == "y")
-                    {
-                        args = new string[2];
-                        args[0] = prevProjectPath;
-
-                        settings.TryGetValue("Port", out prevPort);
-                        if (int.TryParse(prevPort, out int portNumber) == false) prevPort = defaultPort;
-                        args[1] = string.IsNullOrEmpty(prevPort) ? defaultPort : prevPort;
-
-                        return args;
+                        // TODO make enter as "y" default
+                        Log("Do you want to add exe path (" + exePath + ") to user environment PATH? (y/N)");
+                        var res = Console.ReadLine();
+                        if (res == "y")
+                        {
+                            ModifyUserEnvPATH(add: true);
+                        }
                     }
                 }
 
