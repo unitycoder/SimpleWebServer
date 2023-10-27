@@ -9,6 +9,11 @@ namespace SimpleWebServer
 {
     internal static class Tools
     {
+        // only save settings if not loaded from config
+        internal static bool usedConfig = false;
+        // silentmode doesnt display do you want to start in previous folder message
+        private static bool silentMode = false;
+
         public static void Log(string msg, ConsoleColor color = ConsoleColor.White)
         {
             Console.ForegroundColor = color;
@@ -107,10 +112,26 @@ namespace SimpleWebServer
 
                 if (string.IsNullOrEmpty(prevProjectPath) == false && Directory.Exists(prevProjectPath) == true)
                 {
+                    // if projectpath is ., show current exe folder
+                    if (prevProjectPath == ".") prevProjectPath = exePath;
+
                     // TODO make enter as "y" default
-                    Log("Do you want to start in previous Project folder: " + prevProjectPath + " ? (y/N)");
-                    var res = Console.ReadLine();
-                    if (res == "y")
+
+                    // check if silent mode (then dont ask if want to start)
+                    string silentModeString;
+                    if (settings.TryGetValue("Silent", out silentModeString) && silentModeString.ToLower() == "true")
+                    {
+                        silentMode = true;
+                    }
+
+                    string res = "n";
+                    if (silentMode == false)
+                    {
+                        Log("Do you want to start server for folder: " + prevProjectPath + " ? (y/N)");
+                        res = Console.ReadLine();
+                    }
+
+                    if (silentMode == true || res == "y")
                     {
                         args = new string[2];
                         args[0] = prevProjectPath;
@@ -118,6 +139,7 @@ namespace SimpleWebServer
                         settings.TryGetValue("Port", out prevPort);
                         if (int.TryParse(prevPort, out int portNumber) == false) prevPort = defaultPort;
                         args[1] = string.IsNullOrEmpty(prevPort) ? defaultPort : prevPort;
+
                         return args;
                     }
                 }
@@ -211,12 +233,25 @@ namespace SimpleWebServer
         static Dictionary<string, string> LoadSettings()
         {
             var settings = new Dictionary<string, string>();
+
+            // first check local folder for settings override
+            var localSettingsFile = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "config.ini");
+
             // load from roaming folder
-            var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var settingsFile = Path.Combine(roamingFolder, "SimpleWebServer", "config.ini");
+            string settingsFile;
+            if (File.Exists(localSettingsFile))
+            {
+                settingsFile = localSettingsFile;
+            }
+            else
+            {
+                var settingsFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                settingsFile = Path.Combine(settingsFolder, "SimpleWebServer", "config.ini");
+            }
 
             if (File.Exists(settingsFile))
             {
+                usedConfig = true;
                 Log("Loading settings from: " + settingsFile, ConsoleColor.DarkGray);
 
                 var lines = File.ReadAllLines(settingsFile);

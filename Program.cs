@@ -21,7 +21,7 @@ namespace SimpleWebServer
             string port = args[1];
             Tools.Log("Serving directory: " + args[0]);
 
-            Tools.SaveSettings(args);
+            if (Tools.usedConfig == false) Tools.SaveSettings(args);
             StartServer(port);
 
             // launch browser
@@ -68,7 +68,7 @@ namespace SimpleWebServer
             {
                 // then allow external connections
                 allowExternalConnections = true;
-                Tools.Log("The application is running as an administrator. External connections are allowed!");
+                Tools.Log("The application is running as an administrator. External connections are allowed!", ConsoleColor.Cyan);
                 // NOTE using hostname ipaddress requires admin rights
                 var ipAddress = Tools.GetIpAddress();
                 if (string.IsNullOrEmpty(ipAddress.ToString()) == false)
@@ -78,7 +78,7 @@ namespace SimpleWebServer
             }
             else
             {
-                Tools.Log("The application is not running as an administrator.");
+                Tools.Log("The application is not running as an administrator.", ConsoleColor.Gray);
             }
 
             foreach (string prefix in listener.Prefixes)
