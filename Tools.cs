@@ -14,62 +14,12 @@ namespace SimpleWebServer
         // silentmode doesnt display do you want to start in previous folder message
         private static bool silentMode = false;
 
-        public static void Log(string msg, ConsoleColor color = ConsoleColor.White)
-        {
-            Console.ForegroundColor = color;
-            Console.WriteLine(msg);
-        }
-
-        // get LAN IP address starting with 192.
-        public static object GetIpAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork && ip.ToString().StartsWith("192."));
-
-            if (ipAddress != null)
-            {
-                //Console.WriteLine("LAN IP Address: " + ipAddress.ToString());
-                return ipAddress.ToString();
-            }
-            else
-            {
-                Log("LAN IP Address not found.");
-                return null;
-            }
-        }
-
-        public static bool PortAvailable(string port)
-        {
-            bool portAvailable = true;
-            IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-            IPEndPoint[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpListeners();
-
-            foreach (IPEndPoint endpoint in tcpConnInfoArray)
-            {
-                if (endpoint.Port.ToString() == port)
-                {
-                    portAvailable = false;
-                    break;
-                }
-            }
-
-            return portAvailable;
-        }
-
-        public static bool IsUserAnAdmin()
-        {
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-            // Check for the admin SIDs
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
-
         public static string[]? ValidateArguments(string[] args, string defaultPort)
         {
             // TODO add change server folder button? restarts in new folder?
             // TODO if have correct arguments, should use them or config? probably should use arguments then
 
-            string exePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string exePath = GetExePath();
 
             // load settings first, so can override things
             var settings = LoadSettings();
@@ -77,7 +27,8 @@ namespace SimpleWebServer
             string prevPort;
             settings.TryGetValue("ProjectPath", out prevProjectPath);
 
-            if (string.IsNullOrEmpty(prevProjectPath) == false && Directory.Exists(prevProjectPath) == true)
+            // if have 2 arguments try to use them instead
+            if ((args.Length < 1 || args.Length > 2) && string.IsNullOrEmpty(prevProjectPath) == false && Directory.Exists(prevProjectPath) == true)
             {
                 // if projectpath is ., show current exe folder
                 if (prevProjectPath == ".") prevProjectPath = exePath;
@@ -94,7 +45,7 @@ namespace SimpleWebServer
                 string res = "n";
                 if (silentMode == false)
                 {
-                    Log("Do you want to start server for folder: " + prevProjectPath + " ? (y/N)");
+                    Log("Do you want to start server at: " + prevProjectPath + " ? (y/N)");
                     res = Console.ReadLine();
                 }
 
@@ -144,7 +95,7 @@ namespace SimpleWebServer
                     if (silentMode == false)
                     {
                         // TODO make enter as "y" default
-                        Log("Do you want to add exe path (" + exePath + ") to user environment PATH? (y/N)");
+                        Log("Do you want to add exe path (" + exePath + ") into User environment PATH? (y/N)");
                         var res = Console.ReadLine();
                         if (res == "y")
                         {
@@ -201,7 +152,7 @@ namespace SimpleWebServer
                 else if (int.TryParse(args[0], out int portNumber))
                 {
                     args = new string[2];
-                    args[0] = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                    args[0] = GetExePath();
                     args[1] = portNumber.ToString();
                 }
                 // if its not a path or port number, show usage
@@ -217,7 +168,7 @@ namespace SimpleWebServer
             if (args.Length < 2)
             {
                 args = new string[2];
-                args[0] = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                args[0] = GetExePath();
                 args[1] = defaultPort;
             }
 
@@ -244,7 +195,9 @@ namespace SimpleWebServer
             var settings = new Dictionary<string, string>();
 
             // first check local folder for settings override
-            var localSettingsFile = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "config.ini");
+            var exePath = GetExePath();
+
+            var localSettingsFile = Path.Combine(exePath, "config.ini");
 
             // load from roaming folder
             string settingsFile;
@@ -266,6 +219,8 @@ namespace SimpleWebServer
                 var lines = File.ReadAllLines(settingsFile);
                 foreach (var line in lines)
                 {
+                    // skip comments
+                    if (line.StartsWith("#")) continue;
                     var parts = line.Split('=');
                     if (parts.Length == 2)
                     {
@@ -443,7 +398,7 @@ namespace SimpleWebServer
 
         static bool IsAlreadyAddedToPath()
         {
-            string executablePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string executablePath = GetExePath();
             string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User);
             return path.Contains(executablePath);
         }
@@ -451,7 +406,7 @@ namespace SimpleWebServer
         // WARNING: if user has the exe in common already existing path, it will be removed!
         internal static void ModifyUserEnvPATH(bool add)
         {
-            string executablePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+            string executablePath = GetExePath();
             string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User);
 
             if (path.Contains(executablePath) == false)
@@ -481,6 +436,61 @@ namespace SimpleWebServer
                     Log("Directory removed from user PATH successfully.", ConsoleColor.Gray);
                 }
             }
+        }
+
+        public static void Log(string msg, ConsoleColor color = ConsoleColor.White)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(msg);
+        }
+
+        // get LAN IP address starting with 192.
+        public static object GetIpAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork && ip.ToString().StartsWith("192."));
+
+            if (ipAddress != null)
+            {
+                //Console.WriteLine("LAN IP Address: " + ipAddress.ToString());
+                return ipAddress.ToString();
+            }
+            else
+            {
+                Log("LAN IP Address not found.");
+                return null;
+            }
+        }
+
+        public static bool PortAvailable(string port)
+        {
+            bool portAvailable = true;
+            IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+            IPEndPoint[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpListeners();
+
+            foreach (IPEndPoint endpoint in tcpConnInfoArray)
+            {
+                if (endpoint.Port.ToString() == port)
+                {
+                    portAvailable = false;
+                    break;
+                }
+            }
+
+            return portAvailable;
+        }
+
+        public static bool IsUserAnAdmin()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            // Check for the admin SIDs
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        private static string? GetExePath()
+        {
+            return Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
         }
 
     } // class
