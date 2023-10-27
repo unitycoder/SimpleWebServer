@@ -35,13 +35,6 @@ namespace SimpleWebServer
 
                 // TODO make enter as "y" default
 
-                // check if silent mode (then dont ask if want to start)
-                string silentModeString;
-                if (settings.TryGetValue("Silent", out silentModeString) && silentModeString.ToLower() == "true")
-                {
-                    silentMode = true;
-                }
-
                 string res = "n";
                 if (silentMode == false)
                 {
@@ -60,6 +53,10 @@ namespace SimpleWebServer
 
                     return args;
                 }
+            }
+            else
+            {
+                usedConfig = false;
             }
 
             // if too many arguments, show usage
@@ -204,6 +201,8 @@ namespace SimpleWebServer
             if (File.Exists(localSettingsFile))
             {
                 settingsFile = localSettingsFile;
+                // silent mode if local config
+                silentMode = true;
             }
             else
             {
