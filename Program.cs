@@ -74,7 +74,13 @@ namespace SimpleWebServer
                 if (string.IsNullOrEmpty(ipAddress.ToString()) == false)
                 {
                     listener.Prefixes.Add($"http://{ipAddress}:{port}/");
+                    // NOTE you can enable HTTPS here, if you have https setup done https://gist.github.com/unitycoder/ec217d20eecc2dfaf8d316acd8c3c5c5
+                    // listener.Prefixes.Add($"https://{ipAddress}:4443/");
                 }
+
+                // NOTE or here can add localhost with https
+                //listener.Prefixes.Add($"https://localhost:4443/");
+
             }
             else
             {
