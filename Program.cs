@@ -159,6 +159,10 @@ namespace SimpleWebServer
                 {
                     response.ContentType = "application/octet-stream";
                 }
+                else if (path.EndsWith(".json"))
+                {
+                    response.ContentType = "application/json";
+                }
 
                 string page = rootFolder + path;
                 string msg = null;
