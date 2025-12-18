@@ -29,6 +29,10 @@ SimpleWebServer.exe c:\work\website 8080
 ### Troubleshooting
 - Other computer cannot connect? You need to open firewall on the hosting pc (allow inbound TCP 8080)
 
+### Advanced
+- To Enable HTTPS: Uncomment those listeners https://github.com/unitycoder/SimpleWebServer/blob/main/Program.cs#L77
+- And do the one time setup from this gist:  https://gist.github.com/unitycoder/ec217d20eecc2dfaf8d316acd8c3c5c5
+
 ### Images
 ![image](https://github.com/unitycoder/SimpleWebServer/assets/5438317/9d1a0a31-6752-495f-810a-f0ef8a4ef7f4)
 ![image](https://github.com/unitycoder/SimpleWebServer/assets/5438317/7eb390ec-aa5f-4c26-9fa6-6fab42ee6bf8)
