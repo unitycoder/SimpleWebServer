@@ -10,6 +10,7 @@ smoll single exe local c# webserver (ps. no security or safety!)
 - F1 = Install Context menu
 - F2 = Uninstall Context menu
 - F5 = Open Browser (again)
+- F6 = Use HTTPS *Requires https setup below (see Advanced)
 - F12 = Restart App as an Administrator
 
 ### USAGE
