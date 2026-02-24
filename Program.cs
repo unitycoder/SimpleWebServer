@@ -9,28 +9,36 @@ namespace SimpleWebServer
         static string rootFolder = "";
         static bool allowExternalConnections = false;
         static string defaultPort = "8080";
+        static bool useHttps = false;
+        static string defaultHttpsPort = "4443";
 
         static void Main(string[] args)
         {
             Tools.PrintBanner();
+
+            useHttps = args.Any(a => string.Equals(a, "--https", StringComparison.OrdinalIgnoreCase));
+            args = args.Where(a => !string.Equals(a, "--https", StringComparison.OrdinalIgnoreCase)).ToArray();
 
             args = Tools.ValidateArguments(args, defaultPort);
             if (args == null) return;
 
             rootFolder = args[0];
             string port = args[1];
+            if (useHttps) port = defaultHttpsPort;
             Tools.Log("Serving directory: " + args[0]);
 
             if (Tools.usedConfig == false) Tools.SaveSettings(args);
             StartServer(port);
 
             // launch browser
-            string url = $"http://localhost:{port}/";
+            string scheme = useHttps ? "https" : "http";
+            string url = $"{scheme}://localhost:{port}/";
             Tools.LaunchBrowser(url);
 
             Tools.Log("Press F1/F2 to Install/Uninstall Explorer Context menu");
             Tools.Log("Press F3/F4 to add/remove executable on User environment PATH");
             Tools.Log("Press F5 to open Browser");
+            Tools.Log("Press F6 to toggle HTTPS (restarts app; requires admin + http.sys cert binding)");
             // wait for keypress to restart as admin
             if (Tools.IsUserAnAdmin() == false)
             {
@@ -43,23 +51,75 @@ namespace SimpleWebServer
                     if (k.Key == ConsoleKey.F2) Tools.UninstallContextMenu();
                     if (k.Key == ConsoleKey.F3) Tools.ModifyUserEnvPATH(add: true);
                     if (k.Key == ConsoleKey.F4) Tools.ModifyUserEnvPATH(add: false);
-                    if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(args);
+                    if (k.Key == ConsoleKey.F5) Tools.LaunchBrowser(url);
+                    if (k.Key == ConsoleKey.F6) RestartWithHttpsToggle(args);
+                    if (k.Key == ConsoleKey.F12) Tools.RestartAsAdmin(BuildArgsForRestart(args, useHttps));
                 }
             }
             else
             {
                 Tools.Log("Press Enter to exit.");
                 Tools.Log("------------------------------------------------");
+                while (true)
+                {
+                    var k = Console.ReadKey(true);
+                    if (k.Key == ConsoleKey.Enter) break;
+                    if (k.Key == ConsoleKey.F1) Tools.InstallContextMenu();
+                    if (k.Key == ConsoleKey.F2) Tools.UninstallContextMenu();
+                    if (k.Key == ConsoleKey.F3) Tools.ModifyUserEnvPATH(add: true);
+                    if (k.Key == ConsoleKey.F4) Tools.ModifyUserEnvPATH(add: false);
+                    if (k.Key == ConsoleKey.F5) Tools.LaunchBrowser(url);
+                    if (k.Key == ConsoleKey.F6) RestartWithHttpsToggle(args);
+                }
+
+                return;
             }
 
             Console.ReadLine();
         }
 
+        private static string[] BuildArgsForRestart(string[] baseArgs, bool https)
+        {
+            if (!https) return baseArgs;
+            return baseArgs.Concat(new[] { "--https" }).ToArray();
+        }
+
+        private static void RestartWithHttpsToggle(string[] currentArgs)
+        {
+            bool targetHttps = !useHttps;
+
+            string[] baseArgs = currentArgs;
+
+            if (targetHttps)
+            {
+                // If enabling https and not admin, restart elevated.
+                if (!Tools.IsUserAnAdmin())
+                {
+                    Tools.Log("HTTPS requires admin (and an SSL certificate binding). Restarting as Admin...", ConsoleColor.Yellow);
+                    Tools.RestartAsAdmin(BuildArgsForRestart(baseArgs, https: true));
+                    return;
+                }
+
+                Tools.RestartNormally(BuildArgsForRestart(baseArgs, https: true));
+                return;
+            }
+
+            // Disabling https
+            if (!Tools.IsUserAnAdmin())
+            {
+                Tools.RestartNormally(BuildArgsForRestart(baseArgs, https: false));
+                return;
+            }
+
+            Tools.RestartNormally(BuildArgsForRestart(baseArgs, https: false));
+        }
+
         private static void StartServer(string port)
         {
-            // start server
             HttpListener listener = new HttpListener();
-            listener.Prefixes.Add($"http://localhost:{port}/");
+
+            string scheme = useHttps ? "https" : "http";
+            listener.Prefixes.Add($"{scheme}://localhost:{port}/");
 
             // check if runas admin
             bool isAdmin = Tools.IsUserAnAdmin();
@@ -69,22 +129,21 @@ namespace SimpleWebServer
                 // then allow external connections
                 allowExternalConnections = true;
                 Tools.Log("The application is running as an administrator. External connections are allowed!", ConsoleColor.Cyan);
+
                 // NOTE using hostname ipaddress requires admin rights
                 var ipAddress = Tools.GetIpAddress();
-                if (string.IsNullOrEmpty(ipAddress.ToString()) == false)
+                if (string.IsNullOrEmpty(ipAddress?.ToString()) == false)
                 {
-                    listener.Prefixes.Add($"http://{ipAddress}:{port}/");
-                    // NOTE you can enable HTTPS here, if you have https setup done https://gist.github.com/unitycoder/ec217d20eecc2dfaf8d316acd8c3c5c5
-                    // listener.Prefixes.Add($"https://{ipAddress}:4443/");
+                    listener.Prefixes.Add($"{scheme}://{ipAddress}:{port}/");
                 }
-
-                // NOTE or here can add localhost with https
-                //listener.Prefixes.Add($"https://localhost:4443/");
-
             }
             else
             {
                 Tools.Log("The application is not running as an administrator.", ConsoleColor.Gray);
+                if (useHttps)
+                {
+                    Tools.Log("HTTPS mode usually requires running as Admin + an http.sys SSL certificate binding for the chosen port.", ConsoleColor.Yellow);
+                }
             }
 
             foreach (string prefix in listener.Prefixes)

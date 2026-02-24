@@ -356,6 +356,27 @@ namespace SimpleWebServer
             }
         }
 
+        internal static void RestartNormally(string[] args)
+        {
+            try
+            {
+                string exePath = Process.GetCurrentProcess().MainModule.FileName;
+
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.UseShellExecute = true;
+                startInfo.WorkingDirectory = Environment.CurrentDirectory;
+                startInfo.FileName = exePath;
+                startInfo.Arguments = string.Join(" ", args);
+
+                Process.Start(startInfo);
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Log("Error restarting: " + ex.Message, ConsoleColor.Red);
+            }
+        }
+
         internal static void RestartAsAdmin(string[] args)
         {
             try
