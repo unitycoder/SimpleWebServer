@@ -12,7 +12,7 @@ smoll single exe local c# webserver (ps. no security or safety!)
 - F2 = Uninstall Context menu
 - F5 = Open Browser (again)
 - F6 = Enable HTTPS
-- F12 = Restart App as an Administrator
+- F12 = Restart App as an Administrator *Required to be able to host for LAN IP address
 
 ### USAGE
 - Easy method is to use Context menu inside Explorer folder
