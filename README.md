@@ -7,10 +7,11 @@ smoll single exe local c# webserver (ps. no security or safety!)
 - Easily start webserver for specific folder from Explorer context menu!
 - Customizable port
 - Running as admin allows you to host using IP Address (so other computers from your network 192.* can connect)
+- Optional config.ini file for settings
 - F1 = Install Context menu
 - F2 = Uninstall Context menu
 - F5 = Open Browser (again)
-- F6 = Use HTTPS *Requires https setup below (see Advanced)
+- F6 = Enable HTTPS
 - F12 = Restart App as an Administrator
 
 ### USAGE
@@ -27,12 +28,14 @@ SimpleWebServer.exe c:\work\website 8080
 [root-folder-to-serve] : application folder (where .exe is located)
 [port] : 8080
 
+### Using config.ini file
+- Place config.ini in the same folder with executable
+- ```ProjectPath=``` Set path to use as webserver root
+- ```Port=8080``` Webserver port
+- ```Silent=True``` Doesnt ask if want to use previously used webserver root folder
+
 ### Troubleshooting
 - Other computer cannot connect? You need to open firewall on the hosting pc (allow inbound TCP 8080)
-
-### Advanced
-- To Enable HTTPS: Uncomment those listeners https://github.com/unitycoder/SimpleWebServer/blob/main/Program.cs#L77
-- And do the one time setup from this gist:  https://gist.github.com/unitycoder/ec217d20eecc2dfaf8d316acd8c3c5c5
 
 ### Images
 ![image](https://github.com/unitycoder/SimpleWebServer/assets/5438317/9d1a0a31-6752-495f-810a-f0ef8a4ef7f4)
