@@ -244,25 +244,32 @@ namespace SimpleWebServer
                     // display client ip address and request info
                     Tools.Log(context.Request.RemoteEndPoint.Address + " < " + path + (response.ContentType != null ? " (" + response.ContentType + ")" : ""));
 
-                    using (FileStream fileStream = File.Open(page, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (BinaryReader reader = new BinaryReader(fileStream))
+                    byte[] fileBytes = File.ReadAllBytes(page);
+
+                    // Strip UTF-8 BOM if present for text-based files
+                    bool isTextFile = path.EndsWith(".html") || path.EndsWith(".htm") ||
+                                      path.EndsWith(".css") || path.EndsWith(".js") ||
+                                      path.EndsWith(".json") || path.EndsWith(".xml") ||
+                                      path.EndsWith(".txt") || path.EndsWith(".svg");
+
+                    if (isTextFile && fileBytes.Length >= 3 &&
+                        fileBytes[0] == 0xEF && fileBytes[1] == 0xBB && fileBytes[2] == 0xBF)
                     {
-                        response.ContentLength64 = fileStream.Length;
+                        // Skip BOM bytes
+                        byte[] noBomBytes = new byte[fileBytes.Length - 3];
+                        Array.Copy(fileBytes, 3, noBomBytes, 0, noBomBytes.Length);
+                        fileBytes = noBomBytes;
+                    }
 
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
+                    response.ContentLength64 = fileBytes.Length;
 
-                        try
-                        {
-                            while ((bytesRead = reader.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                response.OutputStream.Write(buffer, 0, bytesRead);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Tools.Log("Error reading file: " + ex, ConsoleColor.Yellow);
-                        }
+                    try
+                    {
+                        response.OutputStream.Write(fileBytes, 0, fileBytes.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        Tools.Log("Error writing response: " + ex, ConsoleColor.Yellow);
                     }
                 }
 
