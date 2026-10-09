@@ -180,7 +180,7 @@ namespace SimpleWebServer
                     path = "/index.html";
                 }
 
-                if (Path.GetExtension(path) == ".html" || path.EndsWith(".js") || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
+                if (Path.GetExtension(path) == ".html" || path.EndsWith(".js") || path.EndsWith(".mjs") || path.EndsWith(".js.gz") || path.EndsWith(".js.br") || path.EndsWith(".mjs.gz") || path.EndsWith(".mjs.br"))
                 {
                     response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
                     response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
@@ -206,8 +206,9 @@ namespace SimpleWebServer
                 {
                     response.ContentType = "application/wasm";
                 }
-                else if (path.EndsWith(".js") || path.EndsWith(".js.gz") || path.EndsWith(".js.br"))
+                else if (path.EndsWith(".js") || path.EndsWith(".mjs") || path.EndsWith(".js.gz") || path.EndsWith(".js.br") || path.EndsWith(".mjs.gz") || path.EndsWith(".mjs.br"))
                 {
+                    // Serve both .js and .mjs files as JavaScript modules
                     response.ContentType = "application/javascript";
                 }
                 else if (path.EndsWith(".data.gz"))
@@ -248,7 +249,7 @@ namespace SimpleWebServer
 
                     // Strip UTF-8 BOM if present for text-based files
                     bool isTextFile = path.EndsWith(".html") || path.EndsWith(".htm") ||
-                                      path.EndsWith(".css") || path.EndsWith(".js") ||
+                                      path.EndsWith(".css") || path.EndsWith(".js") || path.EndsWith(".mjs") ||
                                       path.EndsWith(".json") || path.EndsWith(".xml") ||
                                       path.EndsWith(".txt") || path.EndsWith(".svg");
 
